@@ -11,3 +11,12 @@ itsdangerous
 sqlalchemy
 psycopg2-binary 
 qdrant-client
+
+langchain
+langchain_community
+chromadb
+pypdf
+pymupdf
+sentence-transformers
+groq
+arxiv
