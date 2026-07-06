@@ -1,0 +1,13 @@
+fastapi[standard]>=0.112.0
+pydantic>=2.7.0
+python-dotenv>=1.0.0
+pyjwt>=2.8.0
+passlib[bcrypt]
+authlib
+httpx
+pydantic-settings
+uvicorn
+itsdangerous
+sqlalchemy
+psycopg2-binary 
+qdrant-client
