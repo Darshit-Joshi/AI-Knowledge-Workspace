@@ -1,6 +1,12 @@
 from fastapi import APIRouter, HTTPException, status, Request, Depends
+from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.orm import Session
+import jwt
+
 from fastapi.responses import RedirectResponse
 from authlib.integrations.starlette_client import OAuth
+from core.database import get_db
+from models.user import User
 from schemas.auth import UserRegister, UserLogin, TokenResponse
 from core.security import hash_password, verify_password, create_access_token
 from core.config import settings
@@ -16,28 +22,60 @@ oauth.register(
   client_kwargs ={'scope':'openid email profile'}
 )
 
-fake_users_db= {}
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> dict:
+    """
+    Global dependency to validate incoming app JWT tokens.
+    Protects sensitive routes like document uploads and chat history.
+    """
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials. Please log in again.",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        if email is None:
+            raise credentials_exception
+    except jwt.PyJWTError:
+        raise credentials_exception
+        
+    user = db.query(User).filter(User.email == email).first()
+    if user is None:
+        raise credentials_exception
+        
+    return {"id": user.id, "email": user.email, "username": user.username}
+  
+  
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 async def register_manual( user: UserRegister) :
-  if user.email in fake_users_db :
-    raise HTTPException(status_code=400 , detail="Email already Exist")
-  hashed_pwd = hash_password(user.password)
-  fake_users_db[user.email] ={
-    "email":user.email,
-    "password":hashed_pwd,
-    "username": user.username,
-    "provider":"manual"
-  }
+  existing_user = db.query(User).filter(User.email == user.email).first()
   
+  if existing_user :
+    raise HTTPException(status_code=400, detail="Email already exist")
+  
+  hashed_pwd = hash_password(user.password)
+  
+  db_user = User(
+        email=user.email,
+        username=user.username,
+        hashed_password=hashed_pwd,
+        provider="manual"
+    )
+  db.add(db_user)
+  db.commit()
+  db.refresh(db_user)
+     
   token = create_access_token( data ={"sub": user.email})
   return TokenResponse(access_token=token, user_email=user.email, auth_provider="manual")
 
 @router.post("/login", response_model=TokenResponse)
 async def login_manual( credentials : UserLogin):
- user = fake_users_db.get(credentials.email)
+ user = db.query(User).filter(User.email == credentials.email).first()
  
- if not user or user.get("provider") != "manual":
+ if not user or user.provider != "manual":
    raise HTTPException(
      status_code=status.HTTP_401_UNAUTHORIZED,
      detail='Invalid email or password. (If you registered via google, plaese use google login)'
@@ -71,13 +109,16 @@ async def google_callback(request: Request):
   email = user_info.get('email')
   name = user_info.get('name', email.split('@')[0])
   
-  if not email in fake_users_db:
-    fake_users_db[email] = {
-            "email": email,
-            "username": name,
-            "hashed_password": None, # No password needed for OAuth users!
-            "provider": "google"
-        }
+  if not user:
+    user = User(
+      email=email,
+      username = name,
+      hashed_password=None,
+      provider="google"
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
   access_token = create_access_token(data ={"sub":email})
   
   return TokenResponse(auth_provider="oauth", user_email=email, access_token=access_token)

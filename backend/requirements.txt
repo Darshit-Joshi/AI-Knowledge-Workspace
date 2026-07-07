@@ -11,3 +11,12 @@ itsdangerous
 sqlalchemy
 psycopg2-binary 
 qdrant-client
+pypdf
+langchain-text-splitters
+fastembed
+langgraph
+langchain-core
+langchain-openai
+langchain-google-genai
+langchain-community
+duckduckgo-search
