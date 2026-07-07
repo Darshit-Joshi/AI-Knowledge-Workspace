@@ -18,9 +18,9 @@ def ingest_pdf(path: str) -> Document:
     full_text = "\n".join(page["text"] for page in pages)
 
     document = Document(
-        workspace_id="default_workspace",   # or pass dynamically
-        title=Path(path).name,              # filename as title
-        source_type=SourceType.PDF,         # use enum, not string
+        workspace_id="default_workspace",  
+        title=Path(path).name,             
+        source_type=SourceType.PDF,         
         content=full_text,
         metadata={
             "page_count": len(pages),

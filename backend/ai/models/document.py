@@ -1,6 +1,8 @@
 from pydantic import BaseModel, Field
 from datetime import datetime
 from uuid import uuid4
+from typing import Any
+
 
 from ai.models.source_type import SourceType
 
@@ -16,7 +18,9 @@ class Document(BaseModel):
 
     content: str
 
-    metadata: dict = {}
+    metadata: dict[str, Any] = Field(
+    default_factory=dict
+)
 
     created_at: datetime = Field(
         default_factory=datetime.utcnow
