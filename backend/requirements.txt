@@ -15,8 +15,13 @@ qdrant-client
 langchain
 langchain_community
 chromadb
-pypdf
 pymupdf
+pytesseract
 sentence-transformers
 groq
 arxiv
+youtube-transcript-api
+trafilatura ##Better Website Extraction
+beautifulsoup4
+requests
+python-docx
