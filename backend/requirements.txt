@@ -20,3 +20,12 @@ langchain-openai
 langchain-google-genai
 langchain-community
 duckduckgo-search
+
+langchain
+langchain_community
+chromadb
+pypdf
+pymupdf
+sentence-transformers
+groq
+arxiv
