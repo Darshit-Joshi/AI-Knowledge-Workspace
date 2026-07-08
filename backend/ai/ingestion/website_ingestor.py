@@ -1,4 +1,3 @@
-from urllib.parse import urlparse
 import trafilatura
 from trafilatura.metadata import extract_metadata
 
