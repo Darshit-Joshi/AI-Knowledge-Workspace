@@ -1,8 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
+from core.database import engine, Base
+from models.user import User
+from models.document import Document
 from api.auth import router as auth_router
 from core.config import settings
+from api.documents import router as docs_router
+from api.agents import router as agents_router
+
 
 app = FastAPI(
     title="AI Knowledge Workspace",
@@ -10,13 +16,18 @@ app = FastAPI(
     version="1.0.0"
 )
 
+Base.metadata.create_all(bind=engine)
+
 app.add_middleware(SessionMiddleware,  secret_key=settings.SECRET_KEY)
+
 app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:3000",
         "http://localhost:5174",], allow_credentials=True, allow_headers=["*"], allow_methods=["*"])
 
 app.include_router(auth_router)
+app.include_router(docs_router)
+app.include_router(agents_router)
 
 @app.get("/")
 async def health_check():
