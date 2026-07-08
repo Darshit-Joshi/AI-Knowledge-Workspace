@@ -9,12 +9,12 @@ warnings.filterwarnings(
 )
 
 
-from backend.ai.embeddings.embedded_chunk import generate_embeddings
+from backend.ai.embeddings.embedded_chunks import generate_embeddings
 from backend.ai.chunking.text_chunker import create_chunks
 from ai.ingestion.pdf_ingestor import ingest_pdf
 from backend.ai.vectorstore.vector_store import VectorStore
 from ai.retrieval import retriever
-from ai.rag.rag_service import RAGService
+from backend.ai.rag.rag_pipeline import RAGService
 
 
 doc, pages = ingest_pdf("Attention.pdf")
