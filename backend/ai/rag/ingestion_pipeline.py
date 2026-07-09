@@ -1,5 +1,5 @@
 from ai.chunking.text_chunker import create_chunks
-from backend.ai.embeddings.embedded_chunks import generate_embeddings
+from ai.embeddings.embedded_chunks import generate_embeddings
 from ai.vectorstore.vector_store import VectorStore 
 
 
