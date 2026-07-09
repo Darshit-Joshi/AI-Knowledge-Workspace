@@ -6,9 +6,25 @@ from qdrant_client import QdrantClient
 from core.config import settings
 
 
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+DATABASE_URL = getattr(
+    settings,
+    "DATABASE_URL",
+    "postgresql://postgres:password@localhost:5432/ai_workspace"
+)
+
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True
+)
+
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
+
 Base = declarative_base()
+
 
 def get_db():
     db = SessionLocal()
