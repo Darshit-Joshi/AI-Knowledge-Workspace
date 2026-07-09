@@ -16,6 +16,7 @@ from ai.repositories.conversation_repository import (
 from ai.memory.conversation_memory import (
     ConversationMemory
 )
+from ai.prompt.prompt_builder import PromptBuilder
 
 load_dotenv()
 
@@ -39,6 +40,7 @@ class RAGService:
                 repository=self.conversation_repository
             )
         )
+        self.prompt_builder = PromptBuilder()
 
     def answer_question(
         self,
@@ -88,14 +90,7 @@ Current Question:
             query=retrieval_query,
             k=k
         )
-
-        # Future version:
-        #
-        # retrieval_result = self.retriever.retrieve(
-        #     workspace_id=workspace_id,
-        #     query=retrieval_query,
-        #     k=k
-        # )
+        
 
         # --------------------------------------------------
         # Build context
@@ -110,36 +105,11 @@ Current Question:
         # Build prompt
         # --------------------------------------------------
 
-        prompt = f"""
-You are an AI Knowledge Workspace assistant.
-
-You answer questions using ONLY the
-provided knowledge base context.
-
-Rules:
-
-1. Use ONLY the supplied context.
-2. Never invent facts.
-3. If information is unavailable, say:
-   "I could not find that information in the uploaded knowledge base."
-4. Use conversation history to resolve references such as:
-   - it
-   - they
-   - that
-   - those
-5. Provide a clear and concise answer.
-6. If multiple sources support the answer,
-   synthesize them.
-
-Conversation History:
-{history_text}
-
-Knowledge Base Context:
-{context}
-
-Question:
-{question}
-"""
+        prompt = self.prompt_builder.build(
+    question=question,
+    history=history_text,
+    context=context
+)
 
         # --------------------------------------------------
         # Generate response
