@@ -9,12 +9,12 @@ warnings.filterwarnings(
 )
 
 
-from ai.embeddings.pdf_embedding import generate_embeddings
-from ai.chunking.pdf_chunk import create_pdf_chunks
+from backend.ai.embeddings.embedded_chunks import generate_embeddings
+from backend.ai.chunking.text_chunker import create_chunks
 from ai.ingestion.pdf_ingestor import ingest_pdf
-from ai.vectorstore.pdfstore import VectorStore
+from backend.ai.vectorstore.vector_store import VectorStore
 from ai.retrieval import retriever
-from ai.rag.rag_service import RAGService
+from backend.ai.rag.rag_pipeline import RAGService
 
 
 doc, pages = ingest_pdf("Attention.pdf")
@@ -25,7 +25,7 @@ print("Pages:", doc.metadata["page_count"])
 print("Content Preview:")
 print(doc.content[:500])
 
-chunks = create_pdf_chunks(
+chunks = create_chunks(
     doc,
     pages=pages
 )

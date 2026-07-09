@@ -1,5 +1,5 @@
 from openai import OpenAI
-from ai.vectorstore.pdfstore import VectorStore
+from backend.ai.vectorstore.vector_store import VectorStore
 from ai.models.retrievalresult import (
     RetrievalResult,
     RetrievedChunk
