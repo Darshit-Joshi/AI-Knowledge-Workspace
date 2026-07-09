@@ -77,7 +77,7 @@ workflow.add_node("synthesize_answer", synthesis_answer_node)
 workflow.set_entry_point("generate_queries")
 workflow.add_edge("generate_queries","web_search")
 workflow.add_edge("web_search","synthesize_answer")
-workflow.add_edge("synthesize_answer","END")
+workflow.add_edge("synthesize_answer",END)
 
 research_agent = workflow.compile()
 

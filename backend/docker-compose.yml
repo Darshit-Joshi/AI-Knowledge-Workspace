@@ -1,31 +1,11 @@
 version: "3.8"
 
 services:
-  # 1. Relational Database for Users, Workspaces, and Chat Metadata
-  postgres:
-    image: postgres:16-alpine
-    container_name: ai_workspace_postgres
-    restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: ai_workspace
+  api:
+    build: .
+    container_name: ai_workspace_api
     ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-  # 2. Vector Database for High-Speed Semantic RAG Search
-  qdrant:
-    image: qdrant/qdrant:latest
-    container_name: ai_workspace_qdrant
+      - "8000:8000"
+    env_file:
+      - .env
     restart: always
-    ports:
-      - "6333:6333" # REST / HTTP API Port
-      - "6334:6334" # gRPC Port for fast streaming
-    volumes:
-      - qdrant_data:/qdrant/storage
-
-volumes:
-  postgres_data:
-  qdrant_data:

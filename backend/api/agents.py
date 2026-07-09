@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends,BackgroundTasks
 from pydantic import BaseModel
 from agents.web_researcher import research_agent
 from api.auth import get_current_user

@@ -41,4 +41,6 @@ dependencies = [
     "trafilatura>=2.1.0",
     "uvicorn>=0.50.0",
     "youtube-transcript-api>=1.2.4",
+    "apscheduler>=3.11.3",
+    "ddgs>=9.14.4",
 ]

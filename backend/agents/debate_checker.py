@@ -16,7 +16,7 @@ class DebateState(TypedDict):
   
 llm = ChatGoogleGenerativeAI(
   model="gemini-2.5-flash",
-  temperature=0.3
+  temperature=0.3,
   google_api_key = os.getenv("GEMINI_API_KEY")
 )
 
@@ -132,7 +132,7 @@ workflow.add_node("critic_node", critic_node)
 workflow.set_entry_point("drafter_node")
 workflow.add_edge("drafter_node","critic_node")
 
-workflow.add_conditional_edges("critic",debate_router_edge, {"drafter_node":"drafter_node", END:END})
+workflow.add_conditional_edges("critic_node",debate_router_edge, {"drafter_node":"drafter_node", END:END})
 
 debate_agent = workflow.compile()
 
