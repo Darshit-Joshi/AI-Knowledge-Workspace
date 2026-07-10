@@ -1,10 +1,42 @@
+import { Routes, Route } from "react-router-dom";
+
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import Dashboard from "./pages/Dashboard";
+import ProtectedRoute from "./components/ProtectedRoute";
+
 function App() {
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
-      <h1 className="text-4xl font-bold">
-        AI Knowledge Workspace
-      </h1>
-    </div>
+    <Routes>
+      <Route path="/login" element={<Login />} />
+
+      <Route
+        path="/register"
+        element={<Register />}
+      />
+
+      <Route
+        path="/forgot-password"
+        element={<ForgotPassword />}
+      />
+
+      <Route
+        path="/reset-password/:token"
+        element={<ResetPassword />}
+      />
+
+      <Route
+        path="/dashboard"
+        element={
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>}
+        />
+    </Routes>
+      
+  
   );
 }
 
