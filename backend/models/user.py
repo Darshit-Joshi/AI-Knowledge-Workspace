@@ -9,5 +9,10 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     username = Column(String, nullable=False)
     hashed_password = Column(String, nullable=True)  # Nullable for OAuth users
-    provider = Column(String, default="manual")       # "manual" or "google"
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    auth_provider = Column(String, default="manual")       # "manual" or "google"
+    created_at = Column(
+    DateTime(timezone=True),
+    default=lambda: datetime.now(timezone.utc)
+)
+    reset_token = Column(String, nullable=True)
+    reset_token_expiry = Column(DateTime, nullable=True)

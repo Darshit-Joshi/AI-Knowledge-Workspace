@@ -4,10 +4,15 @@ import jwt
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from fastapi.responses import RedirectResponse
 from authlib.integrations.starlette_client import OAuth
+from datetime import datetime, timedelta, timezone
 from core.database import get_db
 from models.user import User
 from schemas.auth import UserRegister, UserLogin, TokenResponse
+from schemas.auth import ForgotPasswordRequest
+from utils.token import generate_reset_token
 from core.security import hash_password, verify_password, create_access_token
+from schemas.auth import ResetPasswordRequest
+from core.security import hash_password
 from core.config import settings
 
 router = APIRouter( prefix="/auth" , tags=["Authentication"])
@@ -23,29 +28,38 @@ oauth.register(
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")
 
-def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> dict:
-    """
-    Global dependency to validate incoming app JWT tokens.
-    Protects sensitive routes like document uploads and chat history.
-    """
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials. Please log in again.",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         email: str = payload.get("sub")
         if email is None:
-            raise credentials_exception
-    except jwt.PyJWTError:
-        raise credentials_exception
-        
-    user = db.query(User).filter(User.email == email).first()
-    if user is None:
-        raise credentials_exception
-        
-    return {"id": user.id, "email": user.email, "username": user.username}
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid token"
+            )
+
+    except Exception:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid token"
+        )
+
+    user = (
+        db.query(User)
+        .filter(User.email == email)
+        .first()
+    )
+
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="User not found"
+        )
+
+    return user
   
   
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
@@ -61,14 +75,8 @@ async def register_manual( user: UserRegister , db: Session = Depends(get_db)) :
         email=user.email,
         username=user.username,
         hashed_password=hashed_pwd,
-        provider="manual"
+        auth_provider="manual"
     )
-  db.add(db_user)
-  db.commit()
-  db.refresh(db_user)
-     
-  token = create_access_token( data ={"sub": user.email})
-  return TokenResponse(access_token=token, user_email=user.email, auth_provider="manual")
 
 @router.post("/login", response_model=TokenResponse)       
 async def login_manual( credentials : UserLogin , db: Session = Depends(get_db)):
@@ -89,6 +97,58 @@ async def login_manual( credentials : UserLogin , db: Session = Depends(get_db))
   
  return TokenResponse(access_token=token, user_email=user.email, auth_provider="manual")
 
+    return TokenResponse(
+        access_token=token,
+        user_email=db_user.email,
+        auth_provider="manual"
+    )
+
+@router.post(
+    "/login",
+    response_model=TokenResponse
+)
+async def login_manual(
+    credentials: UserLogin,
+    db: Session = Depends(get_db)
+):
+    user = (
+        db.query(User)
+        .filter(User.email == credentials.email)
+        .first()
+    )
+
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid email or password"
+        )
+
+    if user.provider != "manual":
+        raise HTTPException(
+            status_code=401,
+            detail=(
+                "This account uses Google login."
+            )
+        )
+
+    if not verify_password(
+        credentials.password,
+        user.hashed_password
+    ):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid email or password"
+        )
+
+    token = create_access_token(
+        data={"sub": user.email}
+    )
+
+    return TokenResponse(
+        access_token=token,
+        user_email=user.email,
+        auth_provider="manual"
+    )
 @router.get("/google/login")
 async def google_login(request : Request):
   redirect_uri = settings.GOOGLE_REDIRECT_URI
