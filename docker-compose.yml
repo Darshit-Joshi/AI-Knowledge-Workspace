@@ -1,0 +1,56 @@
+version: "3.8"
+
+services:
+  # 1. PostgreSQL Relational Database
+  db:
+    image: postgres:15-alpine
+    container_name: ai_workspace_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: ai_workspace
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 2. FastAPI Backend & Agent Engine
+  backend:
+    build: ./server # Change to ./backend if using that folder name
+    container_name: ai_workspace_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      # Connects inside the Docker network using the service name 'db'
+      - DATABASE_URL=postgresql+asyncpg://postgres:password123@db:5432/ai_workspace
+      - QDRANT_URL=${QDRANT_URL}
+      - QDRANT_API_KEY=${QDRANT_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - SECRET_KEY=${SECRET_KEY:-super-secret-docker-key}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # 3. React / Vite Frontend
+  frontend:
+    build:
+      context: ./client # Change to ./frontend if using that folder name
+      args:
+        # Browser calls the API via localhost since it runs on the user's machine
+        - VITE_API_BASE_URL=http://localhost:8000/api/v1
+    container_name: ai_workspace_frontend
+    restart: always
+    ports:
+      - "3000:80" # Maps your computer's port 3000 to Nginx's internal port 80
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
